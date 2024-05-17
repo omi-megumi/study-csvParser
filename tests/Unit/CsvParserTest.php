@@ -56,19 +56,19 @@ class CsvParserTest extends TestCase
 class CsvParser
 {
     private $header;
-    private $data = [];
+    private $data;
 
-    public function __construct(array $header)
+    public function __construct($header)
     {
-        $this->header = $header;
+        $this->header = collect($header);
+        $this->data = collect();
     }
     // 必須要件：csvデータを読み込む
-    public function load(array $data)
+    public function load($data)
     {
-        $this->data = [];
-        foreach($data as $rowData){
-            $this->data[] = new CsvRow($this->header, $rowData);
-        }
+        $this->data = collect($data)->map(function ($rowData) {
+            return new CsvRow($this->header, $rowData);
+        });
         return $this;
     }
 
@@ -78,25 +78,23 @@ class CsvParser
         return count($this->data);
     }
     // 必須要件：引数で指定された行のデータを CsvRow のインスタンスとして返す
-    public function find(int $index) // ？？型
+    public function find(int $index)
     {
-        return $this->data[$index - 1];
+        return $this->data->get($index - 1);
     }
 }
 
 class CsvRow
 {
-    private $data = [];
+    private $data;
 
-    public function __construct(array $header, array $rowData)
+    public function __construct($header,$rowData)
     {
-        foreach ($header as $index => $column) {
-            $this->data[$column] = $rowData[$index];
-        }
+        $this->data = $header->combine(collect($rowData));
     }
 
     public function __get(string $name)
     {
-        return $this->data[$name] ?? null;
+        return $this->data->get($name);
     }
 }
